@@ -28,12 +28,12 @@ public class Main {
 
             if (!scanner.hasNextInt()) {
                 System.out.println("\n[ERROR] Invalid input. Please enter a number between 1 and 3.");
-                scanner.nextLine();
+                scanner.nextLine(); // Clear invalid input
                 continue;
             }
 
             int choice = scanner.nextInt();
-            scanner.nextLine();
+            scanner.nextLine(); // Clear scanner buffer
 
             switch (choice) {
                 case 1:
@@ -129,7 +129,7 @@ public class Main {
 
         double subtotal = baseLeaseAmount + totalUtilities;
 
-        )
+
         double taxRate = 0.12;
         double taxAmount = subtotal * taxRate;
 
@@ -145,7 +145,7 @@ public class Main {
         unitCategories[tenantCount] = unitCategory;
         floorAreas[tenantCount] = sqMeters;
         totalInvoices[tenantCount] = grandTotalBill;
-        tenantCount++;
+        tenantCount++; 
 
 
         System.out.println("\n==================================================");
@@ -169,7 +169,7 @@ public class Main {
         System.out.println("[SUCCESS] Record saved to active tenant list.");
     }
 
-
+    // CASE 2: DISPLAY TENANT INFORMATION
     private static void displayTenantInformation(Scanner scanner) {
         System.out.println("\n==================================================");
         System.out.println("           TENANT INFORMATION RECORDS             ");
@@ -188,16 +188,16 @@ public class Main {
         scanner.nextLine();
 
         if (subChoice == 1) {
-            System.out.println("\n----------------------------------------------------------------------------------");
+            System.out.println("\n-----------------------------------------------------------------------------------------------");
             System.out.printf("%-5s | %-20s | %-10s | %-22s | %-12s | %-14s\n",
                     "NO.", "STORE NAME", "UNIT CODE", "CATEGORY", "AREA (sq.m)", "TOTAL BILL");
-            System.out.println("----------------------------------------------------------------------------------");
+            System.out.println("-------------------------------------------------------------------------------------------------");
 
             for (int i = 0; i < tenantCount; i++) {
                 System.out.printf("%-5d | %-20s | %-10s | %-22s | %-12.2f | PHP %-10.2f\n",
                         (i + 1), storeNames[i], unitCodes[i], unitCategories[i], floorAreas[i], totalInvoices[i]);
             }
-            System.out.println("----------------------------------------------------------------------------------");
+            System.out.println("-------------------------------------------------------------------1------------------------------");
         } else if (subChoice == 2) {
             System.out.print("\nEnter Unit Code to search (e.g., L2-45): ");
             String searchCode = scanner.nextLine();
@@ -223,4 +223,4 @@ public class Main {
             System.out.println("\n[ERROR] Invalid sub-option selected.");
         }
     }
-}2
+}
