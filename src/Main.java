@@ -28,12 +28,12 @@ public class Main {
 
             if (!scanner.hasNextInt()) {
                 System.out.println("\n[ERROR] Invalid input. Please enter a number between 1 and 3.");
-                scanner.nextLine(); // Clear invalid input
+                scanner.nextLine();
                 continue;
             }
 
             int choice = scanner.nextInt();
-            scanner.nextLine(); // Clear scanner buffer
+            scanner.nextLine(); 
 
             switch (choice) {
                 case 1:
@@ -145,7 +145,7 @@ public class Main {
         unitCategories[tenantCount] = unitCategory;
         floorAreas[tenantCount] = sqMeters;
         totalInvoices[tenantCount] = grandTotalBill;
-        tenantCount++; 
+        tenantCount++;
 
 
         System.out.println("\n==================================================");
