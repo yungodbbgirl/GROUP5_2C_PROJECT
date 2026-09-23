@@ -1,13 +1,14 @@
 import java.util.Scanner;
 
 public class Main {
-
+    // Arrays to store tenant record history in memory (up to 50 records)
     private static final int MAX_TENANTS = 50;
     private static String[] storeNames = new String[MAX_TENANTS];
     private static String[] unitCodes = new String[MAX_TENANTS];
     private static String[] unitCategories = new String[MAX_TENANTS];
     private static double[] floorAreas = new double[MAX_TENANTS];
     private static double[] totalInvoices = new double[MAX_TENANTS];
+    private static boolean[] paymentStatuses = new boolean[MAX_TENANTS]; // NEW: Track payment status (true = Paid, false = Unpaid)
     private static int tenantCount = 0; // Tracks number of registered records
 
     public static void main(String[] args) {
@@ -22,18 +23,18 @@ public class Main {
             System.out.println("\n--- MAIN MENU ---");
             System.out.println("1. Process Monthly Tenant Bill");
             System.out.println("2. Display Tenant Information & Records");
-            System.out.println("3. Exit");
-            System.out.print("Select an option (1-3): ");
-
+            System.out.println("3. Update Tenant Details / Mark Payment Status");
+            System.out.println("4. Exit");
+            System.out.print("Select an option (1-4): ");
 
             if (!scanner.hasNextInt()) {
-                System.out.println("\n[ERROR] Invalid input. Please enter a number between 1 and 3.");
+                System.out.println("\n[ERROR] Invalid input. Please enter a number between 1 and 4.");
                 scanner.nextLine();
                 continue;
             }
 
             int choice = scanner.nextInt();
-            scanner.nextLine(); 
+            scanner.nextLine(); // Clear buffer
 
             switch (choice) {
                 case 1:
@@ -43,17 +44,20 @@ public class Main {
                     displayTenantInformation(scanner);
                     break;
                 case 3:
+                    updateTenantRecord(scanner);
+                    break;
+                case 4:
                     running = false;
                     System.out.println("\nExiting Shopping Center Billing System... Goodbye!");
                     break;
                 default:
-                    System.out.println("\n[ERROR] Invalid option. Please select 1, 2, or 3.");
+                    System.out.println("\n[ERROR] Invalid option. Please select 1, 2, 3, or 4.");
             }
         }
         scanner.close();
     }
 
-
+    // CASE 1: PROCESS BILL & SAVE TENANT
     private static void processTenantBilling(Scanner scanner) {
         if (tenantCount >= MAX_TENANTS) {
             System.out.println("\n[WARNING] Tenant database memory limit reached (50 records). Cannot store more.");
@@ -72,7 +76,7 @@ public class Main {
         System.out.print("Enter Occupied Floor Area (sq. meters): ");
         double sqMeters = scanner.nextDouble();
 
-
+        // Tiered Lease Rate Logic (in PHP)
         double ratePerSqMeter;
         String unitCategory;
 
@@ -93,13 +97,11 @@ public class Main {
         System.out.println("--------------------------------------------------");
         System.out.print("Enter Electricity Usage (kWh): ");
         double electricityKWh = scanner.nextDouble();
-        double electricityRate = 12.50;
-        double electricityCost = electricityKWh * electricityRate;
+        double electricityCost = electricityKWh * 12.50;
 
         System.out.print("Enter Water Usage (Cubic Meters): ");
         double waterCuMeters = scanner.nextDouble();
-        double waterRate = 45.00;
-        double waterCost = waterCuMeters * waterRate;
+        double waterCost = waterCuMeters * 45.00;
 
         double totalUtilities = electricityCost + waterCost;
 
@@ -116,7 +118,6 @@ public class Main {
             System.out.print("Enter number of days past due date: ");
             daysOverdue = scanner.nextInt();
 
-
             if (daysOverdue > 0 && daysOverdue <= 7) {
                 penaltyRate = 0.03;
             } else if (daysOverdue <= 15) {
@@ -126,27 +127,19 @@ public class Main {
             }
         }
 
-
         double subtotal = baseLeaseAmount + totalUtilities;
-
-
-        double taxRate = 0.12;
-        double taxAmount = subtotal * taxRate;
-
-
+        double taxAmount = subtotal * 0.12;
         double latePenaltyFee = subtotal * penaltyRate;
-
-
         double grandTotalBill = subtotal + taxAmount + latePenaltyFee;
 
-
+        // Save into memory arrays
         storeNames[tenantCount] = storeName;
         unitCodes[tenantCount] = unitCode;
         unitCategories[tenantCount] = unitCategory;
         floorAreas[tenantCount] = sqMeters;
         totalInvoices[tenantCount] = grandTotalBill;
+        paymentStatuses[tenantCount] = false; // Initial status set to UNPAID
         tenantCount++;
-
 
         System.out.println("\n==================================================");
         System.out.println("       SHOPPING CENTER MONTHLY STATEMENT          ");
@@ -165,6 +158,7 @@ public class Main {
         System.out.printf("Late Penalty (%d days)  : PHP %.2f (%.0f%% rate)\n", daysOverdue, latePenaltyFee, penaltyRate * 100);
         System.out.println("==================================================");
         System.out.printf("GRAND TOTAL BILL       : PHP %.2f\n", grandTotalBill);
+        System.out.println("PAYMENT STATUS         : UNPAID");
         System.out.println("==================================================");
         System.out.println("[SUCCESS] Record saved to active tenant list.");
     }
@@ -188,18 +182,19 @@ public class Main {
         scanner.nextLine();
 
         if (subChoice == 1) {
-            System.out.println("\n-----------------------------------------------------------------------------------------------");
-            System.out.printf("%-5s | %-20s | %-10s | %-22s | %-12s | %-14s\n",
-                    "NO.", "STORE NAME", "UNIT CODE", "CATEGORY", "AREA (sq.m)", "TOTAL BILL");
-            System.out.println("-------------------------------------------------------------------------------------------------");
+            System.out.println("\n--------------------------------------------------------------------------------------------------");
+            System.out.printf("%-5s | %-18s | %-10s | %-20s | %-10s | %-14s | %-10s\n",
+                    "NO.", "STORE NAME", "UNIT CODE", "CATEGORY", "AREA(sq.m)", "TOTAL BILL", "STATUS");
+            System.out.println("--------------------------------------------------------------------------------------------------");
 
             for (int i = 0; i < tenantCount; i++) {
-                System.out.printf("%-5d | %-20s | %-10s | %-22s | %-12.2f | PHP %-10.2f\n",
-                        (i + 1), storeNames[i], unitCodes[i], unitCategories[i], floorAreas[i], totalInvoices[i]);
+                String statusStr = paymentStatuses[i] ? "PAID" : "UNPAID";
+                System.out.printf("%-5d | %-18s | %-10s | %-20s | %-10.2f | PHP %-10.2f | %-10s\n",
+                        (i + 1), storeNames[i], unitCodes[i], unitCategories[i], floorAreas[i], totalInvoices[i], statusStr);
             }
-            System.out.println("-------------------------------------------------------------------1------------------------------");
+            System.out.println("--------------------------------------------------------------------------------------------------");
         } else if (subChoice == 2) {
-            System.out.print("\nEnter Unit Code to search (e.g., L2-45): ");
+            System.out.print("\nEnter Unit Code to search: ");
             String searchCode = scanner.nextLine();
             boolean found = false;
 
@@ -211,6 +206,7 @@ public class Main {
                     System.out.println("Category        : " + unitCategories[i]);
                     System.out.println("Allocated Area  : " + floorAreas[i] + " sq. meters");
                     System.out.printf("Latest Total Bill: PHP %.2f\n", totalInvoices[i]);
+                    System.out.println("Payment Status  : " + (paymentStatuses[i] ? "PAID" : "UNPAID"));
                     found = true;
                     break;
                 }
@@ -219,8 +215,74 @@ public class Main {
             if (!found) {
                 System.out.println("\n[NOT FOUND] No record matching Unit Code '" + searchCode + "'.");
             }
+        }
+    }
+
+    // CASE 3: UPDATE TENANT DETAILS OR MARK AS PAID
+    private static void updateTenantRecord(Scanner scanner) {
+        System.out.println("\n==================================================");
+        System.out.println("       UPDATE TENANT RECORD / PAYMENT STATUS      ");
+        System.out.println("==================================================");
+
+        if (tenantCount == 0) {
+            System.out.println("[ERROR] No tenant records found to update.");
+            return;
+        }
+
+        System.out.print("Enter Unit Code of tenant: ");
+        String searchCode = scanner.nextLine();
+        int foundIndex = -1;
+
+        for (int i = 0; i < tenantCount; i++) {
+            if (unitCodes[i].equalsIgnoreCase(searchCode)) {
+                foundIndex = i;
+                break;
+            }
+        }
+
+        if (foundIndex == -1) {
+            System.out.println("[NOT FOUND] No tenant registered under Unit Code: " + searchCode);
+            return;
+        }
+
+        System.out.println("\n--- CURRENT RECORD ---");
+        System.out.println("Store Name     : " + storeNames[foundIndex]);
+        System.out.println("Unit Code      : " + unitCodes[foundIndex]);
+        System.out.printf("Total Invoice  : PHP %.2f\n", totalInvoices[foundIndex]);
+        System.out.println("Payment Status : " + (paymentStatuses[foundIndex] ? "PAID" : "UNPAID"));
+
+        System.out.println("\nWhat would you like to update?");
+        System.out.println("1. Mark Bill as PAID / UNPAID");
+        System.out.println("2. Update Store Details (Name & Area)");
+        System.out.print("Choice (1-2): ");
+
+        int updateChoice = scanner.nextInt();
+        scanner.nextLine();
+
+        if (updateChoice == 1) {
+            System.out.print("Has this tenant paid the invoice? (true/false): ");
+            boolean isPaid = scanner.nextBoolean();
+            paymentStatuses[foundIndex] = isPaid;
+            System.out.println("\n[SUCCESS] Payment status updated to: " + (isPaid ? "PAID" : "UNPAID"));
+        } else if (updateChoice == 2) {
+            System.out.print("Enter New Store Name: ");
+            storeNames[foundIndex] = scanner.nextLine();
+
+            System.out.print("Enter New Occupied Floor Area (sq. meters): ");
+            double newArea = scanner.nextDouble();
+            floorAreas[foundIndex] = newArea;
+
+            if (newArea < 30) {
+                unitCategories[foundIndex] = "Concourse Kiosk";
+            } else if (newArea <= 250) {
+                unitCategories[foundIndex] = "Inline Retail Unit";
+            } else {
+                unitCategories[foundIndex] = "Anchor Department Unit";
+            }
+
+            System.out.println("\n[SUCCESS] Tenant details updated successfully!");
         } else {
-            System.out.println("\n[ERROR] Invalid sub-option selected.");
+            System.out.println("[ERROR] Invalid option selected.");
         }
     }
 }
